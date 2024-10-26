@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0WXX6VDBW7"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-0WXX6VDBW7');
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ニベア＆アトリックス 拡散大作戦！ver.2.0 対象店舗マップ</title>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBI6bHeD6qrgtjFCkLvUux240SR_3vLOXk"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    .header {
+      background: #0039A6;
+      color: white;
+      padding: 15px 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .header-links {
+      display: flex;
+      gap: 15px;
+    }
+
+    .header-links a {
+      color: white;
+      text-decoration: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .header-links a:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    #container {
+      display: flex;
+      gap: 20px;
+      height: calc(100vh - 60px);
+      margin-top: 60px;
+      padding: 20px;
+    }
+
+    #sidebar {
+      width: 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+
+    #map {
+      flex-grow: 1;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      min-height: 300px;
+    }
+
+    .search-box {
+      padding: 10px;
+      background: white;
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    #store-list {
+      flex-grow: 1;
+      overflow-y: auto;
+      background: white;
+      border-radius: 4px;
+      padding: 10px;
+    }
+
+    .store-item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+    }
+
+    .store-item:hover {
+      background: #f0f0f0;
+    }
+
+    .store-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .store-address {
+      font-size: 0.9em;
+      color: #666;
+    }
+
+    .selected {
+      background: #e3f2fd;
+    }
+
+    #search-message {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1001;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 600px;
+      position: relative;
+    }
+
+    .close-modal {
+      position: absolute;
+      right: 20px;
+      top: 15px;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+
+    .close-modal:hover {
+      color: #000;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        padding: 10px;
+        position: relative;
+      }
+
+      .header h1 {
+        font-size: 1rem;
+        margin-bottom: 10px;
+      }
+
+      #container {
+        flex-direction: column;
+        height: auto;
+        margin-top: 0;
+      }
+
+      #sidebar {
+        width: auto;
+      }
+
+      #map {
+        height: 400px;
+      }
+
+      .modal-content {
+        margin: 10% auto;
+        width: 90%;
+      }
+
+      #store-list {
+        max-height: 300px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <h1>【にじさんじ】ニベア＆アトリックス 拡散大作戦！ver.2.0 対象店舗マップ</h1>
+    <div class="header-links">
+      <a href="https://www.nivea.co.jp/highlights/mission-nivea-nijisanji-ver2" target="_blank">キャンペーンページ</a>
+      <a href="#" id="about-link">このサイトについて</a>
+    </div>
+  </div>
+
+  <div id="container">
+    <div id="sidebar">
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="店舗名や住所で検索">
+        <select id="prefecture-select">
+          <option value="">都道府県を選択</option>
+        </select>
+        <select id="city-select">
+          <option value="">市区町村を選択</option>
+        </select>
+      </div>
+      <div id="store-list">
+        <div id="search-message">検索条件を入力してください</div>
+      </div>
+    </div>
+    <div id="map"></div>
+  </div>
+
+  <div id="about-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>このサイトについて</h2>
+      <p>このマップは「ニベア＆アトリックス 拡散大作戦！ver.2.0」の対象店舗を探すための非公式ツールです。</p>
+      <h3>免責事項</h3>
+      <ul>
+        <li>本サイトは個人が作成した非公式のものであり、花王株式会社および関連企業とは一切関係ありません。</li>
+        <li>掲載している店舗情報の正確性は保証できません。実際の店舗状況と異なる場合があります。</li>
+        <li>本サイトを利用して得られた情報に基づいて行動された結果、何らかの不利益や損害が発生した場合でも、製作者は一切の責任を負いかねます。</li>
+      </ul>
+      <h3>ご利用にあたって</h3>
+      <ul>
+        <li>必ず事前に対象店舗へ在庫状況をご確認ください。</li>
+        <li>店舗の営業時間や定休日についても、直接店舗にてご確認ください。</li>
+        <li>キャンペーンの詳細については、必ず公式サイトでご確認ください。</li>
+        <li>店舗への直接の問い合わせや、過度な確認はお控えください。</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    class StoreMap {
+      constructor() {
+        this.stores = [];
+        this.markers = [];
+        this.map = null;
+        this.bounds = null;
+        this.currentInfoWindow = null;
+        this.prefectureOrder = [
+          '北海道',
+          '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+          '東京都', '神奈川県', '埼玉県', '千葉県', '茨城県', '栃木県', '群馬県',
+          '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県',
+          '岐阜県', '静岡県', '愛知県', '三重県',
+          '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県',
+          '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+          '徳島県', '香川県', '愛媛県', '高知県',
+          '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県',
+          '沖縄県'
+        ];
+
+        this.initialize();
+        this.loadStores();
+        this.setupEventListeners();
+        this.setupModal();
+      }
+
+      setupModal() {
+        const modal = document.getElementById('about-modal');
+        const aboutLink = document.getElementById('about-link');
+        const closeBtn = document.querySelector('.close-modal');
+
+        aboutLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          modal.style.display = 'block';
+        });
+
+        closeBtn.addEventListener('click', () => {
+          modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.style.display = 'none';
+          }
+        });
+      }
+
+      async initialize() {
+        this.map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 6,
+          center: { lat: 36.5, lng: 138.5 },
+          mapTypeControl: true,
+          fullscreenControl: true,
+          streetViewControl: false
+        });
+
+        this.bounds = new google.maps.LatLngBounds();
+      }
+
+      async loadStores() {
+        try {
+          const response = await fetch('./data.json');
+          this.stores = await response.json();
+          this.updatePrefectureList();
+        } catch (error) {
+          console.error('店舗データの読み込みに失敗:', error);
+        }
+      }
+
+      updatePrefectureList() {
+        const prefectures = [...new Set(this.stores.map(store => store.prefecture))];
+        const select = document.getElementById('prefecture-select');
+        select.innerHTML = '<option value="">都道府県を選択</option>';
+
+        prefectures.sort((a, b) => {
+          return this.prefectureOrder.indexOf(a) - this.prefectureOrder.indexOf(b);
+        });
+
+        prefectures.forEach(prefecture => {
+          const option = document.createElement('option');
+          option.value = prefecture;
+          option.textContent = prefecture;
+          select.appendChild(option);
+        });
+      }
+
+      updateCityList(prefecture) {
+        const cities = [...new Set(
+          this.stores
+            .filter(store => store.prefecture === prefecture)
+            .map(store => store.city)
+        )].sort();
+
+        const select = document.getElementById('city-select');
+        select.innerHTML = '<option value="">市区町村を選択</option>';
+
+        cities.forEach(city => {
+          const option = document.createElement('option');
+          option.value = city;
+          option.textContent = city;
+          select.appendChild(option);
+        });
+      }
+
+      setupEventListeners() {
+        document.getElementById('search-input').addEventListener('input', (e) => {
+          this.filterStores();
+        });
+
+        document.getElementById('prefecture-select').addEventListener('change', (e) => {
+          this.updateCityList(e.target.value);
+          this.filterStores();
+        });
+
+        document.getElementById('city-select').addEventListener('change', () => {
+          this.filterStores();
+        });
+      }
+
+      hasSearchCriteria() {
+        const searchText = document.getElementById('search-input').value.trim();
+        const prefecture = document.getElementById('prefecture-select').value;
+        const city = document.getElementById('city-select').value;
+
+        return searchText !== '' || prefecture !== '' || city !== '';
+      }
+
+      filterStores() {
+        if (!this.hasSearchCriteria()) {
+          this.clearMarkers();
+          const listElement = document.getElementById('store-list');
+          listElement.innerHTML = '<div id="search-message">検索条件を入力してください</div>';
+          return;
+        }
+
+        const searchText = document.getElementById('search-input').value.toLowerCase();
+        const prefecture = document.getElementById('prefecture-select').value;
+        const city = document.getElementById('city-select').value;
+
+        const filteredStores = this.stores.filter(store => {
+          const matchesSearch = searchText === '' ||
+            store.store_name.toLowerCase().includes(searchText) ||
+            store.formatted_address.toLowerCase().includes(searchText);
+
+          const matchesPrefecture = prefecture === '' || store.prefecture === prefecture;
+          const matchesCity = city === '' || store.city === city;
+
+          return matchesSearch && matchesPrefecture && matchesCity;
+        });
+
+        this.displayStores(filteredStores);
+      }
+
+      displayStores(stores) {
+        this.clearMarkers();
+        this.bounds = new google.maps.LatLngBounds();
+
+        const listElement = document.getElementById('store-list');
+        listElement.innerHTML = '';
+
+        if (stores.length === 0) {
+          listElement.innerHTML = '<div id="search-message">該当する店舗が見つかりません</div>';
+          return;
+        }
+
+        stores.forEach((store, index) => {
+          const marker = new google.maps.Marker({
+            position: { lat: store.lat, lng: store.lng },
+            map: this.map,
+            title: store.store_name
+          });
+
+          const infoWindow = new google.maps.InfoWindow({
+            content: `
+              <div style="padding: 10px;">
+                <h3 style="margin: 0 0 5px 0;">${store.store_name}</h3>
+                                <p style="margin: 0;">${store.formatted_address}</p>
+                            </div>
+                        `
+          });
+
+          marker.addListener('click', () => {
+            if (this.currentInfoWindow) {
+              this.currentInfoWindow.close();
+            }
+            infoWindow.open(this.map, marker);
+            this.currentInfoWindow = infoWindow;
+          });
+
+          this.markers.push(marker);
+          this.bounds.extend(marker.getPosition());
+
+          const storeItem = document.createElement('div');
+          storeItem.className = 'store-item';
+          storeItem.innerHTML = `
+                        <div class="store-name">${store.store_name}</div>
+                        <div class="store-address">${store.formatted_address}</div>
+                    `;
+
+          storeItem.addEventListener('click', () => {
+            const selected = listElement.querySelector('.selected');
+            if (selected) {
+              selected.classList.remove('selected');
+            }
+
+            storeItem.classList.add('selected');
+
+            this.map.setZoom(15);
+            this.map.setCenter(marker.getPosition());
+
+            if (this.currentInfoWindow) {
+              this.currentInfoWindow.close();
+            }
+            infoWindow.open(this.map, marker);
+            this.currentInfoWindow = infoWindow;
+          });
+
+          listElement.appendChild(storeItem);
+        });
+
+        if (this.markers.length > 0) {
+          this.map.fitBounds(this.bounds);
+        }
+      }
+
+      clearMarkers() {
+        this.markers.forEach(marker => {
+          marker.setMap(null);
+        });
+        this.markers = [];
+        if (this.currentInfoWindow) {
+          this.currentInfoWindow.close();
+        }
+      }
+    }
+
+    window.addEventListener('load', () => {
+      new StoreMap();
+    });
+  </script>
+</body>
+
+</html>
